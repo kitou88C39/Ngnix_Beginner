@@ -1,31 +1,19 @@
-# Stage 1: Build Stage (for installing dependencies)
-FROM node:20-alpine AS builder
+# 最初に調べたnodeのバージョンを記載
+FROM node:16
 
-WORKDIR /app
+# アプリケーションディレクトリを作成する
+WORKDIR /usr/src/app
 
-# Copy package.json and package-lock.json to leverage Docker layer caching
+# アプリケーションの依存関係をインストールする
+# ワイルドカードを使用して、package.json と package-lock.json の両方が確実にコピーされるようにします。
+# 可能であれば (npm@5+)
 COPY package*.json ./
 
-# Install dependencies
-RUN npm install --omit=dev
+RUN npm install
 
-# Copy the rest of the application code
+# アプリケーションのソースをバンドルする
 COPY . .
 
-# If you have a build step (e.g., for TypeScript), uncomment and adjust this line
-# RUN npm run build
-
-# Stage 2: Production Stage (for a smaller final image)
-FROM node:20-alpine
-
-WORKDIR /app
-
-# Copy only the necessary files from the builder stage
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app .
-
-# Expose the port your Express app listens on
+# 開放するport番号を記載
 EXPOSE 3000
-
-# Command to run your application
-CMD ["node", "server.js"]
+CMD [ "npm", "start" ]
